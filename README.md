@@ -136,3 +136,7 @@ of rate variation.  Reverting to v20 which produces realistic alpha parameter.
 
 To do: write output directly to file at each mutation, no need to save to nested list
 currently each generation results in multiple outputs anyway, one for each mutation made
+<<<<<<< HEAD
+=======
+
+>>>>>>> f4511febeca2a140c91f14e2cfab1deca9e6b1dd
