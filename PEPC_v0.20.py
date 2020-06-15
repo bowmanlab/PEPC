@@ -47,7 +47,7 @@ currently each generation results in multiple outputs anyway, one for each mutat
 
 #### user setable parameters ####
 
-db = '/volumes/deming/databases/Pfam-A' ## database for blastp search
+db = 'Pfam-A.fasta' ## database for blastp search
 
 #### end user setable parameters ####
 
@@ -124,10 +124,10 @@ Full command example:\n\
 python PEPC_v0.17.py C:flex=down,gravy=up E:arom=up fasta_file_basename 3 1000 10000'
 
 #### TEST SWITCH ####
-test = True ## Set to false if you want command line arguments used
+test = False ## Set to false if you want command line arguments used
 #####################
 
-test_list = ['null path', 'C:flex=up', 'H:flex=up,iso=down', 'glaciecola_pfam_test', '1', '10', '0'] ## a list used for testing or interactive work
+test_list = ['null path', 'C:flex=up', 'H:flex=up,iso=down', 'beta_galactosidase', '1', '10', '0'] ## a list used for testing or interactive work
 
 if '-h' in sys.argv:
     print help
@@ -400,10 +400,10 @@ for key in posit_var.keys():
                             
 #### run psipred to determine secondary structure ####
 
-if exp_seq + '.clean.ss2' not in os.listdir('.'): 
-    psi = subprocess.Popen('runpsipredplus \"'+exp_seq+'.clean.fasta\"', shell = True) # I am currently running against Pfam-A.fasta using blast+
-    psi.communicate()
+if exp_seq + '.clean.ss2' not in os.listdir('.'):
+    os.system("tcsh ./psipred/BLAST+/runpsipredplus " +exp_seq+".clean.fasta")
 
+   
 ## create dictionary of secondary structure elements by position
 
 structure = {}
@@ -412,9 +412,14 @@ with open(exp_seq+'.clean.ss2', 'r') as pss:
     l = 0
     for line in pss:
         l = l + 1
-        if l > 2:
+        if l > 2 and l < 1002:
             line = re.split(' *', line)
             structure[int(line[1]) - 1] = line[3] # python indexing, starts at 0!
+        elif l > 1001:
+            line = re.split(' *', line)   
+            structure[int(line[0])-1] = line[2]
+            
+            
                 
 ##### model section starts here #####
 
@@ -495,7 +500,7 @@ for start in range(starts):
                 
         #### Generate mutation ####
 
-        if keep == True:            
+        if keep:            
             ## build probability matrix for each position and each possile replacement residue
             probs, sorted_keys, sums = build_mut_matrix(aa_seq_str, aa_freq, sub_matrix, posit_var)
 
@@ -577,7 +582,7 @@ for start in range(starts):
                     if delta_param >= 0: ## change to > to allow survival of neutral mutations
                         keep = False
                                             
-        if keep == True:
+        if keep:
             m = m + 1            
             print n, m, rm, rp + 1, rr, cr, 'mutation:', param_str
             print >> log_out, s, n, m, rm, rp + 1, rr, cr, 'mutation:', param_str
