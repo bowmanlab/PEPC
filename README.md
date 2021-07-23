@@ -5,22 +5,22 @@ Created on Wed Dec 05 15:04:04 2012\
 Jeff Bowman, bowmanjs@gmail.com
 
 ## Recommended Settings
-This guide assumes you are either running a Windows or Linux distribution. No guide is yet avaliable for Mac. 
+This guide assumes you are either running a Windows or Linux distribution. No guide is yet avaliable for MacOS. 
 
-If you are running windows, I recommend using the lastest version of [Ubuntu](https://ubuntu.com/). In addition, the psipred package, which you will download later, requires use of the Tenex C Shell (AKA `tcsh`). You can follow [this guide](https://randomknowhow.com/tech/infrastructure/devops/tutorials/c-shell-tc-shell-install-for-linux-windows-mac/) to install and configure both Ubuntu and tcsh. Do not follow the directions to make bash automatically launch tcsh: stop after step 4. You might as well download the "C shell" (AKA csh), the same way. **runpsipredplus** seems to work with both. 
+If you are running windows, I recommend using the lastest version of [Ubuntu](https://ubuntu.com/) for WSL. In addition, the psipred package, which you will download later, requires use of the Tenex C Shell (AKA `tcsh`). You can follow [this guide](https://randomknowhow.com/tech/infrastructure/devops/tutorials/c-shell-tc-shell-install-for-linux-windows-mac/) to install and configure both Ubuntu and tcsh. Do not follow the directions to make bash automatically launch tcsh: stop after step 4. You might as well download the "C shell" (AKA csh), the same way. **runpsipredplus** seems to work with both. 
  
-PEPC is currently written for Python 2.7.
+PEPC is currently written for Python 2.7 and Python 3.7+. It is recommend you use Python 3 to run PEPC. 
 
 Make sure to free up a few GB of storage for the Pfam-A protein database you will need to download. 
 
 ## Python Packages
-You will need to install [biopython](https://github.com/biopython/biopython). Note that Python 2 references the biopython package as `Bio`, so you may need to rename the folder **biopython** to **Bio** in wherever you store your Python 2 library site-packages. For example: **C:\Python27\Lib\site-package**
+You will need to install [biopython](https://github.com/biopython/biopython). Note that Python 2 references the biopython package as `Bio`, so you may need to rename the folder **biopython** to **Bio** in wherever you store your Python 2 library site-packages. I reccommend configuring and testing according to the biopython manual. PEPC uses the **Bio.SubsMat.MatrixInfo** and **Bio.SeqaUtils.ProtParam** methods. 
 
 ## BLAST dependencies
 
 In addition to Biopython PEPC requires the use of psipred.  You will need to
 download and install this dependency separately, along with your preferred
-protein database (recommend Pfam-A.fasta). You can clone the psipred files from GitHub [here](https://github.com/psipred/psipred). In bash, simply enter the command `tcsh` to enter the "tee-shell", and follow the direction outlined in the psipred README. The **runpsipredplus** script uses NCBI BLAST+, which you can install from [here](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/). We will need the **psiblast.exe** executable from this download. 
+protein database for blasting (recommend Pfam-A.fasta). You can clone the psipred files from GitHub [here](https://github.com/psipred/psipred). In bash, simply enter the command `tcsh` to enter the "tee-shell", and follow the direction outlined in the psipred README. The **runpsipredplus** script uses NCBI BLAST+, which you can install from [here](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/). We will need the **psiblast.exe** executable from this download. 
 
 Specifically PEPC makes use of the **runpsipredplus** script, so make sure that this script is properly configured and available in your path. To do so, edit the **runpsipredplus** as follows:
 
@@ -40,6 +40,12 @@ The period in `./filename` represents the current directory, which will be the P
 
 I recommend running the PSI-Blast against Pfam-A.fasta, after conversion this file to a blast database. Go to <ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release> and click on 'Pfam-A.fasta.gz' to download. Alternatively, you can use the command `wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release`, but downloading this way was taking too long for me. This site has many other databases, such as unitprot, if you plan on using a different protein database. Move this file to wherever you want. I just put in in BLAST+ in the psipred folder, since that is what where the **runpsipredplus** script is, then cd to that directory. Unzip the file using 
 `gunzip -v Pfam-A.fasta.gz`. Then, you can make this into a BLAST database using the command `makeblastdp -dbtype prot -in Pfam-A.fasta -out Pfam-A.fasta`. This will create a bunch of .phr, .pin, and .psq files, and one .pal file. Go ahead and move all of these to the parent PEPC directory. This looks messy and can probably be fixed, but for some reason this is the only way I could make the **runpsipredplus** script play nice with the protein database we just made. 
+
+You will also need to add **runpsipredplus** as as a command to your source file (.bashrc or .bash_profile). In you .bashrc file write
+```
+alias runpsipredplus='PATH_TO_COMMAND'
+```
+This is to help it work with the tcsh as we are jumping directories. 
 
 Next, modify the blast line of the runpsipredplus file like so:
 ```
@@ -64,7 +70,7 @@ recommended that you run blastp against the Pfam-A database used by psipred, but
 db = '/psipred/BLAST+/Pfam-A' ## database for blastp search
 ```
 
-After this point, you should have all the depenecies you need to run the model on your protein sequence. 
+After this point, you should have all the depenecies you need to run PEPC on your protein sequence. 
 
 ## Usage
 Run PEPC as\
@@ -75,7 +81,7 @@ where:\
 `[options]` = a combination of secondary structure elements coil (C), beta sheets
 (E), or alpha helices (H) and parameters (flex, gravy, iso, arom, ai) and
 direction (up, down), e.g. `C:flex=up,gravy=down`\
-`[fasta]` = a protein fasta in the working directory containing a single sequence, omit the .fasta extension.  The file name can NOT have a colon in it. Sorry.
+`[fasta]` = a protein fasta in the working directory containing a single sequence, omit the .fasta extension.  The file name can NOT have a colon in it. Sorry. NEW: your `[fasta]` can be a path to a fasta file (still with no .fasta extension). Please try to avoid the use of spaces in your higher directories as PSIPRED doesn't seem to handle this well. 
 `[starts]` = the number of replicate runs\
 `[events]` = the number of mutations you would like to attempt to see an improvement in the parameter space.  Setting to 0 will calculate the protein parameters by secondary structure.\
 `[dice]` = the number of sides to the dice rolled to determine if a mutation that does not improve fitness should survive.  0 turns off dice, meaning only mutations that improve fitness will be kept.
@@ -94,6 +100,7 @@ Aliphatic index is calculated using the following equation:\
 
 Full command example:\
 `python PEPC_v0.17.py C:flex=down,gravy=up E:arom=up fasta_file_basename 3 1000 10000`
+
 
 
 ## Version updates 
@@ -133,10 +140,3 @@ dependent on amino acid composition, which is not reflected at that step.
 
 v0.21 is DEFUNCT - Was radically underestimating the alpha (shape) parameter
 of rate variation.  Reverting to v20 which produces realistic alpha parameter.
-
-To do: write output directly to file at each mutation, no need to save to nested list
-currently each generation results in multiple outputs anyway, one for each mutation made
-<<<<<<< HEAD
-=======
-
->>>>>>> f4511febeca2a140c91f14e2cfab1deca9e6b1dd
